@@ -1,0 +1,89 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE configuration
+        PUBLIC "-//mybatis.org//DTD Config 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-config.dtd">
+<configuration>
+    <!--
+        使用配置文件将与数据库相关的信息配置到mybaties-config.xml文件中
+        作用：
+            以后使用多个框架的时候，xml文件太多了。如果你想要修改一些关于数据库的信息，需要将每一个xml文件的配置信息都修改，这样就很繁琐。
+            使用db.properties配置文件，只需要修改配置文件的信息就可以了。
+        语法：EL表达式样式：${}
+    -->
+    <properties resource="db.properties" />
+
+    <!--
+        作用：
+            设置与数据库交互的环境
+            例如可以在此处配置二级缓存，配置查询延迟加载策略等等......
+                配置的目的是为了更加有效的查询表中的数据
+
+            在实际的开发项目中，setting的设置基本不使用
+            因为setting对于查询的优化，得到的效果不明显
+
+            对于海量级别的数据，使用setting配置优化，起不到任何的作用
+            对于数据较少的项目，对查询的效率要求较低，也不使用setting
+
+            如果遇到了海量级别的数据，我们如何提高查询的效率呢？
+                基础操作
+                    对于常用的查询字段添加索引
+                高级操作
+                    使用nosql数据库，radis 缓存数据库
+                专业操作
+                    对于电商行业
+                    使用搜索引擎：Elasticsearch和Solr
+    -->
+    <!--<settings>
+        <setting name="" value=""/>
+    </settings>-->
+
+    <!--
+        为mapper映射文件中的domain注册别名：
+            第一种方式：给单个类起别名
+                <typeAlias type="com.itlaobing.domain.Student" alias="stu" />
+            第二种方式：批量起别名
+                <package name="com.itlaobing.domain"/>
+                name:类所在的包
+                别名为MyBatis给我们起好的，为类名，不区分大小写。一般为类名或者类名的首写字母小写
+
+            一般我们使用批量其别名的方式，但有些企业不使用MyBatis的其别名的机制，与企业文化有关，这样方便阅读。
+    -->
+    <typeAliases>
+        <!--
+        <typeAlias type="com.itlaobing.domain.Student" alias="stu" />
+        -->
+        <package name="com.itlaobing.domain"/>
+    </typeAliases>
+    <environments default="development">
+        <environment id="development">
+            <transactionManager type="JDBC"/>
+            <dataSource type="POOLED">
+                <property name="driver" value="${jdbc.driver}"/>
+                <property name="url" value="${jdbc.url}"/>
+                <property name="username" value="${jdbc.username}"/>
+                <property name="password" value="${jdbc.password}"/>
+            </dataSource>
+        </environment>
+    </environments>
+    <!--
+        注册mapper映射文件
+        三种方法：
+            1.resource="xml文件的具体位置":
+                <mapper resource="com/itlaobing/dao/StudentDaoBiz.xml"/>
+            2.class = "xml文件所在的dao包的接口":
+                <mapper class="com/itlaobing/dao/StudentDaoBiz" />
+            3.批量注册:
+                 <package name="com.itlaobing.dao"/>
+                 name:表示该xml所在的包
+
+            一般使用批量注册
+
+            文件路径规则：
+                一般为xml结尾的都是以"/"的方式，一般是包或者java文件的都是以"."的方式
+    -->
+    <mappers>
+        <!--<mapper resource="com/itlaobing/dao/StudentDaoBiz.xml"/>-->
+        <!--<mapper class="com.itlaobing.dao.StudentDaoBiz" />-->
+        <package name="com.itlaobing.dao"/>
+    </mappers>
+</configuration>

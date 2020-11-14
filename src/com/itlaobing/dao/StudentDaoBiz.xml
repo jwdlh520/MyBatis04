@@ -1,0 +1,261 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.itlaobing.dao.StudentDaoBiz">
+    <!--
+        parameterType：
+            java.lang.String    可以
+            String  可以
+            string  可以
+            strinG  可以
+            str 不可以
+            parameterType省略不写   可以
+
+            MyBatis为我们创建好了一些别名：
+                1.简单数据类型（八大数据类型和）String
+                String在Mybatis中是当作基本数据类型处理
+                2.引用数据类型
+                3.map集合
+    -->
+    <select id="findById" resultType="Student" parameterType="String">
+        select * from t_stu where id = #{id}
+    </select>
+    <select id="findAll" resultType="Student">
+        select * from t_stu
+    </select>
+    <delete id="delById">
+        delete from t_stu where id = #{id}
+    </delete>
+    <update id="update">
+        update t_stu set name = #{name},age = #{age} where id = #{id}
+    </update>
+    <insert id="save">
+        insert into t_stu values(#{id},#{name},#{age},#{address})
+    </insert>
+    <!--
+        当传递的参数是domain对象时，#{}中的形参不能随意写，需要与domain对象的属性一致
+    -->
+    <select id="select1" parameterType="Student" resultType="Student">
+        select * from t_stu where name = #{name} and age = #{age}
+    </select>
+    <!--
+        当传递的参数是map集合时，#{}中的形参不能随意写，需要和key的值相同
+    -->
+    <select id="select2" parameterType="Map" resultType="Student">
+        select * from t_stu where name = #{name} and age = #{age}
+    </select>
+    <!--
+        模糊查询，查询名字首字母为"j"的学生信息(使用#{}的形式)
+            '%'空格#{}空格'%'的形式，空格不能省略，这里的空格相当于拼接字符串的"+"
+    -->
+    <select id="select3" resultType="Student">
+        select * from t_stu where name like '%' #{value} '%'
+    </select>
+    <!--
+        使用${}的形式,以后一般不使用这种方式，因为这样可能会有sql注入的风险
+
+        #{}相当于PrepareStatement ${}相当于Statement
+    -->
+    <select id="select4" resultType="Student">
+        select * from t_stu where name like '%${value}%'
+    </select>
+    <!--
+        返回值为Map类型
+        解析resultType属性：
+            当我们的resultType属性的值为Student时：
+                当执行了sql语句之后，查询到的结果为id,name,age
+                根据返回值类型，会自动为我们创建一个该类型的对象，由该类型的对象将结果封装起来
+            查询到第一条结果时：
+                Student s1 = new Student();
+                s1.setId("A001");
+                s1.setName("张飞");
+                s1.setAge(20);
+
+            查询到第二条结果时：
+                Student s2 = new Student();
+                s2.setId("A002");
+                s2.setName("刘备");
+                s2.setAge(23);
+            ......
+            多条记录封装得到了多个Student对象，系统会自动为我们创建一个List集合来保存这些对象
+            List<Student> list = new ArrayList<>();
+            list.add(s1);
+            list.add(s2);
+            ......
+            这样我们就得到了一个List集合
+——————————————————————————————————————————————————————————————————————————————————————————————————————
+            当resultType为Map的时候：
+            执行sql语句，获得到的结果为：id,name,age
+            查询第一条记录时，会自动给我们创建一个Map集合
+            Map<String,Object> map1 = new HashMap<>();
+            map1.put("id","A001");
+            map1.put("name","张飞");
+            map1.put("age","20");
+
+            查询第二条记录时，会自动给我们创建一个Map集合
+            Map<String,Object> map2 = new HashMap<>();
+            map2.put("id","A002");
+            map2.put("name","刘备");
+            map2.put("age","23");
+            ......
+            多条记录封装成了多个map对象，系统自动给我们生成一个List集合来保存这些map对象
+            List<Map<String,Object>> mapList = new ArrayList<>();
+            mapList.add(map1);
+            mapList.add(map2);
+            ......
+            这样我们就获得到了一个范型为Map的List集合
+————————————————————————————————————————————————————————————————————————————————————————————————————————
+            有了domain对象，为什么我们还要用这样的形式呢？
+            业务：查询学生表中交jack的学生的数量：
+            select name, count(name) from t_stu where name = #{name}
+            domain对象中有name属性但是没有count(name)属性，这样就要使用到List<Map<String,Object>>的形式
+    -->
+    <select id="select5" resultType="Map">
+        select * from t_stu
+    </select>
+    <!--
+        当表的字段名称与domain对象属性的名称不一致时
+    -->
+
+    <!--
+        第一种解决方法：修改查询的字段名
+        Student{id='A001', name='jack', age=22}
+        Student{id='A002', name='jerry', age=19}
+        Student{id='A003', name='赵云', age=25}
+        Student{id='A004', name='刘备', age=30}
+        Student{id='A005', name='smith', age=33}
+        Student{id='A006', name='张飞', age=24}
+        Student{id='A009', name='今晚打老虎', age=20}
+    -->
+    <select id="select6" resultType="Student">
+        select id,fullname as name,age from t_stu
+    </select>
+    <!--
+        第二种解决方法：使用resultMap标签
+            id:引用resultMap标签的标识
+            type:指定一个类型，与数据库的字段建立起一一匹配的关系
+            property:domain对象的属性名
+            column:查询出的字段名
+
+            一般建议domain对象的属性和数据库字段名称相同，当有这种情况
+            tlb_id
+            tlb_name
+            tlb_age
+            就需要批量将字段名称修改为属性名称，select标签中直接引用属性：resultMap="stuMap"就可以了
+    -->
+    <resultMap id="stuMap" type="Student">
+        <id property="id" column="id"/>
+        <result property="name" column="fullname"/>
+        <result property="age" column="age"/>
+    </resultMap>
+    <!--
+        结果：
+        Student{id='A001', name='jack', age=22}
+        Student{id='A002', name='jerry', age=19}
+        Student{id='A003', name='赵云', age=25}
+        Student{id='A004', name='刘备', age=30}
+        Student{id='A005', name='smith', age=33}
+        Student{id='A006', name='张飞', age=24}
+        Student{id='A009', name='今晚打老虎', age=20}
+    -->
+    <!--
+        resultMap而不是resultType
+    -->
+    <select id="select7" resultMap="stuMap">
+        select * from t_stu
+    </select>
+    <!--
+        动态sql：
+            where标签
+                if标签
+    -->
+    <select id="select8" resultType="Student" parameterType="Student">
+        select * from t_stu
+        <!--
+            where标签：在domain对象的属性需要使用到where查询时就会起作用，不需要使用到条件查询就不会起作用
+            if标签的test属性：判断字段是否需要进行条件查询的语句
+            MyBatis的where标签，在第一个属性没有参与到条件查询后面的属性参与进来了，会自动将第一个and忽略
+        -->
+        <where>
+            <if test="name!=null and name !=''">
+                name like '%' #{name} '%'
+            </if>
+            <if test="address!=null and address !=''">
+                and address like '%' #{address} '%'
+            </if>
+        </where>
+    </select>
+
+    <!--
+        传入的参数是一个数组，使用foreach标签循环数组
+    -->
+    <select id="select9" resultType="Student">
+        select * from t_stu where id in
+        <!--
+            collection:传递的参数类型
+                array:数组
+                list:集合
+            item:每一次遍历出来的元素，使用该元素时，需要用#{}的形式,这个名称可以随便取。它只是代表数组中每个元素。
+            open:开始的标志
+            close:结束的标志
+            separator:分割符，每一个元素之间的分割标识符
+        -->
+        <foreach collection="array" item="id" close=")" open="(" separator=",">
+            #{id}
+        </foreach>
+    </select>
+    <!--
+        sql片段
+            id属性：让include标签找到这个sql片段的唯一标识
+            sql片段不能太多，在实际的开发过程中不经常使用，因为使用sql片段会降低代码的可读性。
+            有的公司会规定不允许使用sql片段进行编程，就是为了提高代码的可读性
+    -->
+    <sql id="mySql">
+        select * from t_stu
+    </sql>
+    <select id="select10" resultType="Student">
+        <include refid="mySql"/>
+        where id = #{id}
+    </select>
+    <select id="select11" resultType="Map">
+        select
+        s.name as sname,
+        c.name as cname
+        from t_stu s
+        join t_class c
+        where s.classId = c.id
+    </select>
+    <select id="select12" resultType="com.itlaobing.vo.StudentAndClassVo">
+        select
+        s.id as sid,
+        s.name as sname,
+        s.age as sage,
+        s.address as saddress,
+        s.classId as sclassId,
+        c.id as cid,
+        c.name as cname
+        from t_stu s
+        join t_class c
+        on s.classId = c.id
+    </select>
+    <!--
+        vo：vo是我们自己创建的一个类，它包含的属性是由我们手动添加的。当查询出来的字段不能用domain对象封装时，可以使用map和vo。
+        总结：在实际的开发过程中，是使用map还是vo？
+        如果连表查询只是使用几次就不用了，那么就使用map，如果联表查询使用次数较多，比较频繁，需要使用vo
+    -->
+    <select id="select13" resultType="com.itlaobing.vo.StudentAndClassVo">
+        select
+        s.id as sid,
+        s.name as sname,
+        s.age as sage,
+        s.address as saddress,
+        s.classId as sclassId,
+        c.id as cid,
+        c.name as cname
+        from t_stu s
+        join t_class c
+        on s.classId = c.id
+        where s.name like '%' #{name} '%'
+    </select>
+</mapper>
