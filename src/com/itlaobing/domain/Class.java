@@ -3,10 +3,20 @@ package com.itlaobing.domain;
 public class Class {
     private String id;
     private String name;
+    private String teacher;
 
-    public Class(String id, String name) {
+    public Class(String id, String name, String teacher) {
         this.id = id;
         this.name = name;
+        this.teacher = teacher;
+    }
+
+    public String getTeacher() {
+        return teacher;
+    }
+
+    public void setTeacher(String teacher) {
+        this.teacher = teacher;
     }
 
     public String getId() {
